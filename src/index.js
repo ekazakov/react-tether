@@ -1,19 +1,22 @@
 import React, {Children, cloneElement} from 'react'
 import ReactDOM, {unstable_renderSubtreeIntoContainer as renderSubtreeIntoContainer} from 'react-dom';
-import './Tooltip.css';
+import './Tether.css';
 
-import {TooltipBody} from './TooltipBody';
+import {Tether} from './Tether';
 window.ReactDOM = ReactDOM;
 const {toArray} = Children;
 
 
-export default  class Tooltip extends React.Component {
-    renderTooltipBody() {
+export default class Tooltip extends React.Component {
+    renderTether() {
         const target = ReactDOM.findDOMNode(this);
-        console.log('target:', target);
-        const {targetAnchor, elementAnchor} = this.props;
+        // console.log('target:', target);
+        // console.log(this.props);
+        const {targetAnchor, elementAnchor, targetOffset, elementOffset} = this.props;
         renderSubtreeIntoContainer(this,
-            <TooltipBody
+            <Tether
+                targetOffset={targetOffset}
+                elementOffset={elementOffset}
                 targetElement={target}
                 containerElement={this.containerElement}
                 content={this.content}
@@ -24,7 +27,7 @@ export default  class Tooltip extends React.Component {
     }
 
     componentWillMount() {
-        console.log('will mount');
+        // console.log('will mount');
         this.containerElement = document.createElement('div');
         this.containerElement.id = 'containerElement';
         this.containerElement.style.visibility = 'hidden';
@@ -32,11 +35,11 @@ export default  class Tooltip extends React.Component {
     }
 
     componentDidUpdate() {
-        this.renderTooltipBody();
+        this.renderTether();
     }
 
     componentDidMount() {
-        this.renderTooltipBody();
+        this.renderTether();
     }
     
     componentWillUnmount() {

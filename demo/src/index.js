@@ -1,5 +1,6 @@
 import React from 'react'
 import {render} from 'react-dom'
+import './index.css';
 
 import Tooltip from '../../src';
 
@@ -39,33 +40,34 @@ let Demo = class extends React.Component {
     }
 
     render() {
-        return <div className="container" ref="rooot">
-            <h1>react-tooltip Demo</h1>
-
-            <Form >
-                <FormGroup id="exampleInputEmail1" title="Email address" type="email" placeholder="Email"/>
-                <FormGroup id="exampleInputPassword1" title="Password" type="password" placeholder="Password"/>
-                <div ref="block" className="form-group">
-                    <label htmlFor="exampleInputFile">File input</label>
-                    <input type="file" id="exampleInputFile"/>
-                    <p className="help-block">Example block-level help text here.</p>
-                </div>
-                <div className="checkbox">
-                    <label>
-                        <input type="checkbox"/> Check me out
-                    </label>
-                </div>
-                <div style={{position: 'relative', margin: 20, marginLeft: 350, marginTop: 100}}>
-                    <Tooltip targetAnchor="right top" elementAnchor="left top">
-                        <button ref="foo" data-tooltip-target type="button" className="btn btn-default">Do Stuff</button>
-                        <div data-tooltip-content style={{width: 400, height: 300}}>
-                            <div style={{padding: 20}}>
-                                Hello Dick! LOL! {this.state.counter}
-                            </div>
+        return <div className="" >
+            <div className="scroll-box">
+                <div className="content">
+                <Tooltip 
+                         targetAnchor="right top"
+                         elementAnchor="left top"
+                         targetOffset="10 10"
+                         elementOffset="20% 20%"
+                         constraints={[
+                               {
+                                    to: 'window',
+                                    attachment: 'together',
+                                    pin: true,
+                                    outOfBounds: 'hide'
+                               }
+                         ]}
+                >
+                    <div data-tooltip-target type="button" className="target" />
+                    <div data-tooltip-content style={{width: 300, height: 300}}>
+                        <div style={{padding: 20}}>
+                            Hello Dick! LOL! {this.state.counter}
                         </div>
-                    </Tooltip>
+                    </div>
+                </Tooltip>
                 </div>
-            </Form>
+            </div>
+
+
 
         </div>
     }
