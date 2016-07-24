@@ -43,11 +43,11 @@ let Demo = class extends React.Component {
         return <div className="" >
             <div className="scroll-box">
                 <div className="content">
-                <Tooltip 
+                <Tooltip
                          targetAnchor="right top"
                          elementAnchor="left top"
-                         targetOffset="10 10"
-                         elementOffset="20% 20%"
+                         targetOffset="100% 0"
+                         elementOffset="0% 0%"
                          constraints={[
                                {
                                     to: 'window',

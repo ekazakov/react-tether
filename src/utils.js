@@ -106,6 +106,28 @@ export function mirrorAnchorVeritcal({tAnchorVert, eAnchorVert}) {
     return {tAnchorVert, eAnchorVert};
 }
 
+function isPercent(str) {
+    return str[str.length - 1] === '%';
+}
+
+export function parseOffset(offset, {width, height}) {
+    let [horiz, vert] = offset.split(' ');
+
+    if (isPercent(vert)) {
+       vert = height / 100 * parseFloat(vert.slice(0, -1), 10);
+    } else {
+        vert = parseFloat(vert, 10);
+    }
+
+    if (isPercent(horiz)) {
+        horiz = width / 100 * parseFloat(horiz.slice(0, -1), 10);
+    } else {
+        horiz = parseFloat(horiz, 10);
+    }
+
+    return [horiz, vert];
+}
+
 export function calcPosition(
     {tAnchorHoriz, tAnchorVert, eAnchorHoriz, eAnchorVert},
     {targetTop, targetLeft, targetWidth, targetHeight, targetRight, targetBottom},
@@ -115,6 +137,8 @@ export function calcPosition(
 ) {
     const midX = targetLeft + targetWidth / 2;
     const midY = targetTop + targetHeight / 2;
+    const [targetHorizOffset, targetVertOffset] = parseOffset(targetOffset, {width: targetWidth, height: targetHeight});
+    const [elementHorizOffset, elementVertOffset] = parseOffset(elementOffset, {width: elementWidth, height: elementHeight});
 
     let elemTop = 0;
     let elemLeft = 0;
@@ -123,68 +147,70 @@ export function calcPosition(
 
     if (tAnchorHoriz === LEFT) {
         if (eAnchorHoriz === LEFT) {
-            elemLeft = targetLeft;
+            elemLeft = targetLeft + targetHorizOffset;
         } else if (eAnchorHoriz === CENTER) {
-            elemLeft = targetLeft;
+            elemLeft = targetLeft + targetHorizOffset;
             transformLeft = -50;
         } else if (eAnchorHoriz === RIGHT) {
-            elemLeft = targetLeft;
+            elemLeft = targetLeft + targetHorizOffset;
             transformLeft = -100;
         }
     } else if (tAnchorHoriz === CENTER) {
         if (eAnchorHoriz === LEFT) {
-            elemLeft = midX;
+            elemLeft = midX + targetHorizOffset;
         } else if (eAnchorHoriz === CENTER) {
-            elemLeft = midX;
+            elemLeft = midX + targetHorizOffset;
             transformLeft = -50;
         } else if (eAnchorHoriz === RIGHT) {
-            elemLeft = midX;
+            elemLeft = midX + targetHorizOffset;
             transformLeft = -100;
         }
     } else if (tAnchorHoriz === RIGHT) {
         if (eAnchorHoriz === LEFT) {
-            elemLeft = targetRight;
+            elemLeft = targetRight + targetHorizOffset;
         } else if (eAnchorHoriz === CENTER) {
-            elemLeft = targetRight;
+            elemLeft = targetRight + targetHorizOffset;
             transformLeft = -50;
         } else if (eAnchorHoriz === RIGHT) {
-            elemLeft = targetRight;
+            elemLeft = targetRight + targetHorizOffset;
             transformLeft = -100;
         }
-    } else if (tAnchorVert === TOP) {
+    }
+
+    if (tAnchorVert === TOP) {
         if (eAnchorVert === TOP) {
-            elemTop = targetTop;
+            elemTop = targetTop + targetVertOffset;
         } else if (eAnchorVert === CENTER) {
-            elemTop = targetTop;
+            elemTop = targetTop + targetVertOffset;
             transformTop = -50;
         } else if (eAnchorVert === BOTTOM) {
-            elemTop = targetTop;
+            elemTop = targetTop + targetVertOffset;
             transformTop = -100;
         }
     } else if (tAnchorVert === CENTER) {
         if (eAnchorVert === TOP) {
-            elemTop = midY;
+            elemTop = midY + targetVertOffset;
         } else if (eAnchorVert === CENTER) {
-            elemTop = midY;
+            elemTop = midY + targetVertOffset;
             transformTop = -50;
         } else if (eAnchorVert === BOTTOM) {
-            elemTop = midY;
+            elemTop = midY + targetVertOffset;
             transformTop = -100;
         }
     } else if (tAnchorVert === BOTTOM) {
         if (eAnchorVert === TOP) {
-            elemTop = targetBottom;
+            elemTop = targetBottom + targetVertOffset;
         } else if (eAnchorVert === CENTER) {
-            elemTop = targetBottom;
+            elemTop = targetBottom + targetVertOffset;
             transformTop = -50;
         } else if (eAnchorVert === BOTTOM) {
-            elemTop = targetBottom;
+            elemTop = targetBottom + targetVertOffset;
             transformTop = -100;
         }
     }
 
-    elemTop = Math.round(elemTop + transformTop / 100 * elementHeight);
-    elemLeft = Math.round(elemLeft + transformLeft / 100 * elementWidth);
+    elemTop = Math.round(elemTop + transformTop / 100 * elementHeight + elementVertOffset);
+    elemLeft = Math.round(elemLeft + transformLeft / 100 * elementWidth + elementHorizOffset);
     return {elemTop, elemLeft};
 }
 
