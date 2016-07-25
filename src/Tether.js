@@ -1,6 +1,6 @@
 import React from 'react'
 import {findDOMNode} from 'react-dom';
-import {getScrollParents, position, getTargetBox} from './utils';
+import {getScrollParents, position, getTargetBox, isElement} from './utils';
 
 export class Tether extends React.Component {
     constructor(props, ...args) {
@@ -17,14 +17,40 @@ export class Tether extends React.Component {
         };
     }
 
+    prepareConstraints(constraints) {
+        return constraints.map(constraint => {
+            if (isElement(constraint.to)) {
+                return constraint.to.getBoundingClientRect();
+            }
+
+            if (constraint.to === 'scroll-parent') {
+                const scrollParents = getScrollParents(this.props.targetElement);
+
+                if (scrollParents.length > 0) {
+                    constraint.to = scrollParents[0].getBoundingClientRect();
+                } else {
+                    constraint.to = 'window';
+                }
+            }
+
+            if (constraint.to === 'window') {
+                constraint.to = {
+                    top: 0, left: 0, right: window.innerWidth, bottom: window.innerHeight, width: window.innerWidth, height: window.innerHeight
+                };
+            }
+
+            return constraint;
+        });
+    }
+
     reposition = () => {
         const [tAnchorHoriz, tAnchorVert] = this.props.targetAnchor.split(' ');
         const [eAnchorHoriz, eAnchorVert] = this.props.elementAnchor.split(' ');
         const elementBox = findDOMNode(this).getBoundingClientRect();
         const targetBox = this.props.targetElement.getBoundingClientRect();
         const containerBox = {top: 0, left: 0, right: window.innerWidth, bottom: window.innerHeight};
-        const {constraints, targetOffset, elementOffset} = this.props;
-        
+        const {targetOffset, elementOffset, } = this.props;
+        const constraints = this.prepareConstraints(this.props.constraints);
         const newState = position({
             stateCopy: {...this.state},
             tAnchorHoriz,

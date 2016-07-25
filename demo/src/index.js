@@ -46,11 +46,11 @@ let Demo = class extends React.Component {
                 <Tooltip
                          targetAnchor="right top"
                          elementAnchor="left top"
-                         targetOffset="100% 0"
+                         targetOffset="0% 0"
                          elementOffset="0% 0%"
                          constraints={[
                                {
-                                    to: 'window',
+                                    to: 'scroll-parent',
                                     attachment: 'together',
                                     pin: true,
                                     outOfBounds: 'hide'
@@ -58,7 +58,7 @@ let Demo = class extends React.Component {
                          ]}
                 >
                     <div data-tooltip-target type="button" className="target" />
-                    <div data-tooltip-content style={{width: 300, height: 300}}>
+                    <div data-tooltip-content style={{width: 100, height: 300}}>
                         <div style={{padding: 20}}>
                             Hello Dick! LOL! {this.state.counter}
                         </div>

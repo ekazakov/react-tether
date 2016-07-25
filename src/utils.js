@@ -6,6 +6,10 @@ function tryDo(callback) {
     } catch (e) {}
 }
 
+export function isElement(node) {
+    return node && node.nodeType === ELEMENT_NODE;
+}
+
 export function getScrollParents(el) {
     // In firefox if the el is inside an iframe with display: none; window.getComputedStyle() will return null;
     // https://bugzilla.mozilla.org/show_bug.cgi?id=548397
@@ -14,7 +18,7 @@ export function getScrollParents(el) {
     let parents = [];
 
     let parent = el;
-    while ((parent = parent.parentNode) && parent && parent.nodeType === ELEMENT_NODE) {
+    while ((parent = parent.parentNode) && isElement(parent)) {
         let style;
         style = tryDo(() => getComputedStyle(parent));
 
@@ -74,6 +78,45 @@ export function isOutOfBoundingBox(...args) {
     return !fitHorizontal || !fitVertical;
 }
 
+function boxIntersections(elementBox, containerBox) {
+    let overTop = false;
+    let overLeft = false;
+    let overBottom = false;
+    let overRight = false;
+
+    const {
+        left: elementLeft,
+        right: elementRight,
+        top: elementTop,
+        bottom: elementBottom
+    } = elementBox;
+
+    const {
+        left: containerLeft,
+        right: containerRight,
+        top: containerTop,
+        bottom: containerBottom
+    } = containerBox;
+
+    if (elementTop <= containerTop) {
+        overTop = true;
+    }
+
+    if (elementLeft <= containerLeft) {
+        overLeft = true;
+    }
+
+    if (elementBottom >= containerBottom) {
+        overBottom = true;
+    }
+
+    if (elementRight >= containerRight) {
+        overRight = true;
+    }
+
+    return {overTop, overLeft, overBottom, overRight};
+}
+
 export function mirrorAnchorHorizontal({tAnchorHoriz, eAnchorHoriz}) {
     if (tAnchorHoriz === LEFT) {
         tAnchorHoriz = RIGHT;
@@ -130,6 +173,7 @@ export function parseOffset(offset, {width, height}) {
 
 export function calcPosition(
     {tAnchorHoriz, tAnchorVert, eAnchorHoriz, eAnchorVert},
+    constraints,
     {targetTop, targetLeft, targetWidth, targetHeight, targetRight, targetBottom},
     {elementWidth, elementHeight},
     targetOffset,
@@ -295,12 +339,17 @@ export function position({
     constraints,
     targetOffset, elementOffset
 }) {
-    const fitting = isFitInBoundingBox(elementBox, containerBox);
-    const {fitHorizontal, fitVertical} = fitting;
-    elementBox = getElementBox(elementBox);
-    targetBox = getTargetBox(targetBox);
+    // const fitting = isFitInBoundingBox(elementBox, containerBox);
+    // const {fitHorizontal, fitVertical} = fitting;
 
+    constraints.forEach(constraint => {
+            console.log(boxIntersections(elementBox, constraint.to));
+        // if (isOutOfBoundingBox(elementBox, constraint.to)) { }
+    });
+
+    targetBox = getTargetBox(targetBox);
+    elementBox = getElementBox(elementBox);
     // stateCopy = applyConstraints(constraints, stateCopy);
 
-    return Object.assign({}, stateCopy, calcPosition(stateCopy, targetBox, elementBox, targetOffset, elementOffset))
+    return Object.assign({}, stateCopy, calcPosition(stateCopy, constraints, targetBox, elementBox, targetOffset, elementOffset))
 }

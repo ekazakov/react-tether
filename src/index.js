@@ -12,7 +12,7 @@ export default class Tooltip extends React.Component {
         const target = ReactDOM.findDOMNode(this);
         // console.log('target:', target);
         // console.log(this.props);
-        const {targetAnchor, elementAnchor, targetOffset, elementOffset} = this.props;
+        const {targetAnchor, elementAnchor, targetOffset, elementOffset, constraints} = this.props;
         renderSubtreeIntoContainer(this,
             <Tether
                 targetOffset={targetOffset}
@@ -22,6 +22,7 @@ export default class Tooltip extends React.Component {
                 content={this.content}
                 targetAnchor={targetAnchor}
                 elementAnchor={elementAnchor}
+                constraints={constraints}
             />,
         this.containerElement);
     }
