@@ -54,6 +54,9 @@ let Demo = class extends React.Component {
                                     attachment: 'together',
                                     pin: true,
                                     outOfBounds: 'hide'
+                               },
+                               {
+                                   to: 'window',
                                }
                          ]}
                 >

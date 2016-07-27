@@ -1,13 +1,13 @@
 import React from 'react'
 import {findDOMNode} from 'react-dom';
-import {getScrollParents, position, getTargetBox, isElement} from './utils';
+import {getScrollParents, position, isElement} from './utils';
 
 export class Tether extends React.Component {
     constructor(props, ...args) {
         super(props, ...args);
         const [tAnchorHoriz, tAnchorVert] = this.props.targetAnchor.split(' ');
         const [eAnchorHoriz, eAnchorVert] = this.props.elementAnchor.split(' ');
-        const targetBB = getTargetBox(this.props.targetElement.getBoundingClientRect());
+        const targetBB = this.props.targetElement.getBoundingClientRect();
         this.state = {
             tAnchorHoriz,
             tAnchorVert,
@@ -48,7 +48,7 @@ export class Tether extends React.Component {
         const [eAnchorHoriz, eAnchorVert] = this.props.elementAnchor.split(' ');
         const elementBox = findDOMNode(this).getBoundingClientRect();
         const targetBox = this.props.targetElement.getBoundingClientRect();
-        const containerBox = {top: 0, left: 0, right: window.innerWidth, bottom: window.innerHeight};
+        const viewportBox = {top: 0, left: 0, right: window.innerWidth, bottom: window.innerHeight};
         const {targetOffset, elementOffset, } = this.props;
         const constraints = this.prepareConstraints(this.props.constraints);
         const newState = position({
@@ -59,7 +59,7 @@ export class Tether extends React.Component {
             eAnchorVert,
             elementBox,
             targetBox,
-            containerBox,
+            viewportBox,
             constraints,
             targetOffset,
             elementOffset

@@ -55,18 +55,12 @@ export function isFitInBoundingBox(elementBox, containerBox) {
     let fitVertical = true;
     let fitHorizontal = true;
     const {left, right, top, bottom} = elementBox;
-    const {
-        left: containerLeft,
-        right: containerRihgt,
-        top: containerTop,
-        bottom: containerBottom
-    } = containerBox;
 
-    if (left < containerLeft || right > containerRihgt) {
+    if (left < containerBox.left || right > containerBox.right) {
         fitHorizontal = false;
     }
 
-    if (top < containerTop || bottom > containerBottom) {
+    if (top < containerBox.top || bottom > containerBox.bottom) {
         fitVertical = false;
     }
 
@@ -154,10 +148,10 @@ function isPercent(str) {
 }
 
 export function parseOffset(offset, {width, height}) {
-    let [horiz, vert] = offset.split(' ');
+    var [horiz, vert] = offset.split(' ');
 
     if (isPercent(vert)) {
-       vert = height / 100 * parseFloat(vert.slice(0, -1), 10);
+        vert = height / 100 * parseFloat(vert.slice(0, -1), 10);
     } else {
         vert = parseFloat(vert, 10);
     }
@@ -173,16 +167,15 @@ export function parseOffset(offset, {width, height}) {
 
 export function calcPosition(
     {tAnchorHoriz, tAnchorVert, eAnchorHoriz, eAnchorVert},
-    constraints,
-    {targetTop, targetLeft, targetWidth, targetHeight, targetRight, targetBottom},
-    {elementWidth, elementHeight},
+    targetBox,
+    elementBox,
     targetOffset,
     elementOffset
 ) {
-    const midX = targetLeft + targetWidth / 2;
-    const midY = targetTop + targetHeight / 2;
-    const [targetHorizOffset, targetVertOffset] = parseOffset(targetOffset, {width: targetWidth, height: targetHeight});
-    const [elementHorizOffset, elementVertOffset] = parseOffset(elementOffset, {width: elementWidth, height: elementHeight});
+    const midX = targetBox.left + targetBox.width / 2;
+    const midY = targetBox.top + targetBox.height / 2;
+    const [targetHorizOffset, targetVertOffset] = parseOffset(targetOffset, {width: targetBox.width, height: targetBox.height});
+    const [elementHorizOffset, elementVertOffset] = parseOffset(elementOffset, {width: elementBox.width, height: elementBox.height});
 
     let elemTop = 0;
     let elemLeft = 0;
@@ -191,12 +184,12 @@ export function calcPosition(
 
     if (tAnchorHoriz === LEFT) {
         if (eAnchorHoriz === LEFT) {
-            elemLeft = targetLeft + targetHorizOffset;
+            elemLeft = targetBox.left + targetHorizOffset;
         } else if (eAnchorHoriz === CENTER) {
-            elemLeft = targetLeft + targetHorizOffset;
+            elemLeft = targetBox.left + targetHorizOffset;
             transformLeft = -50;
         } else if (eAnchorHoriz === RIGHT) {
-            elemLeft = targetLeft + targetHorizOffset;
+            elemLeft = targetBox.left + targetHorizOffset;
             transformLeft = -100;
         }
     } else if (tAnchorHoriz === CENTER) {
@@ -211,24 +204,24 @@ export function calcPosition(
         }
     } else if (tAnchorHoriz === RIGHT) {
         if (eAnchorHoriz === LEFT) {
-            elemLeft = targetRight + targetHorizOffset;
+            elemLeft = targetBox.right + targetHorizOffset;
         } else if (eAnchorHoriz === CENTER) {
-            elemLeft = targetRight + targetHorizOffset;
+            elemLeft = targetBox.right + targetHorizOffset;
             transformLeft = -50;
         } else if (eAnchorHoriz === RIGHT) {
-            elemLeft = targetRight + targetHorizOffset;
+            elemLeft = targetBox.right + targetHorizOffset;
             transformLeft = -100;
         }
     }
 
     if (tAnchorVert === TOP) {
         if (eAnchorVert === TOP) {
-            elemTop = targetTop + targetVertOffset;
+            elemTop = targetBox.top + targetVertOffset;
         } else if (eAnchorVert === CENTER) {
-            elemTop = targetTop + targetVertOffset;
+            elemTop = targetBox.top + targetVertOffset;
             transformTop = -50;
         } else if (eAnchorVert === BOTTOM) {
-            elemTop = targetTop + targetVertOffset;
+            elemTop = targetBox.top + targetVertOffset;
             transformTop = -100;
         }
     } else if (tAnchorVert === CENTER) {
@@ -243,18 +236,18 @@ export function calcPosition(
         }
     } else if (tAnchorVert === BOTTOM) {
         if (eAnchorVert === TOP) {
-            elemTop = targetBottom + targetVertOffset;
+            elemTop = targetBox.bottom + targetVertOffset;
         } else if (eAnchorVert === CENTER) {
-            elemTop = targetBottom + targetVertOffset;
+            elemTop = targetBox.bottom + targetVertOffset;
             transformTop = -50;
         } else if (eAnchorVert === BOTTOM) {
-            elemTop = targetBottom + targetVertOffset;
+            elemTop = targetBox.bottom + targetVertOffset;
             transformTop = -100;
         }
     }
 
-    elemTop = Math.round(elemTop + transformTop / 100 * elementHeight + elementVertOffset);
-    elemLeft = Math.round(elemLeft + transformLeft / 100 * elementWidth + elementHorizOffset);
+    elemTop = Math.round(elemTop + transformTop / 100 * elementBox.height + elementVertOffset);
+    elemLeft = Math.round(elemLeft + transformLeft / 100 * elementBox.width + elementHorizOffset);
     return {elemTop, elemLeft};
 }
 
@@ -263,8 +256,8 @@ export function horizReposition(stateCopy, targetBB, clientBB, containerBox, tar
         {...stateCopy, ...mirrorAnchorHorizontal(stateCopy)}, targetBB, clientBB, targetOffset, elementOffset);
     const top = elemTop;
     const left = elemLeft;
-    const bottom = top + clientBB.elementHeight;
-    const right = left + clientBB.elementWidth;
+    const bottom = top + clientBB.height;
+    const right = left + clientBB.width;
 
     let fitH = isFitInBoundingBox({top, left, bottom, right}, containerBox).fitHorizontal;
 
@@ -280,8 +273,8 @@ export function vertReposition(stateCopy, targetBB, clientBB, containerBox, targ
         {...stateCopy, ...mirrorAnchorVeritcal(stateCopy)}, targetBB, clientBB, targetOffset, elementOffset);
     const top = elemTop;
     const left = elemLeft;
-    const bottom = top + clientBB.elementHeight;
-    const right = left + clientBB.elementWidth;
+    const bottom = top + clientBB.height;
+    const right = left + clientBB.width;
 
     const fitV = isFitInBoundingBox({top, left, bottom, right}, containerBox).fitVertical;
 
@@ -292,39 +285,40 @@ export function vertReposition(stateCopy, targetBB, clientBB, containerBox, targ
     return stateCopy;
 }
 
-export function getTargetBox(box) {
-    let {width, height, top, left, bottom, right} = box;
-
-    return {
-        targetWidth: width, targetHeight: height, targetTop: top, targetLeft: left, targetBottom: bottom, targetRight: right
-    };
-}
-
-export function getElementBox(box) {
-    let {width, height, top, left, bottom, right} = box;
-    return {
-        elementWidth: width, elementHeight: height, elementTop: top, elementLeft: left, elementBottom: bottom, elementRight: right
-    };
-}
-
-function applyConstraints(constraints = [], stateCopy) {
+function applyConstraints({
+    stateCopy,
+    elementBox,
+    targetBox,
+    tAnchorHoriz,
+    tAnchorVert,
+    eAnchorHoriz,
+    eAnchorVert,
+    viewportBox,
+    constraints,
+    targetOffset,
+    elementOffset
+}) {
     if (constraints.length === 0) {
         return stateCopy;
     }
 
-    if (!fitHorizontal) {
-        return horizReposition(stateCopy, targetBox, elementBox, containerBox);
-    } else if (stateCopy.tAnchorHoriz !== tAnchorHoriz || stateCopy.eAnchorHoriz !== eAnchorHoriz){
-        return horizReposition(stateCopy, targetBox, elementBox, containerBox);
-    }
+    constraints.forEach(constraint => {
+        const {fitHorizontal, fitVertical} = isFitInBoundingBox(elementBox, constraint.to);
 
-    if (!fitVertical) {
-        return vertReposition(stateCopy, targetBox, elementBox, containerBox);
-    } else if (stateCopy.tAnchorVert !== tAnchorVert || stateCopy.eAnchorVert !== eAnchorVert) {
-        return vertReposition(stateCopy, targetBox, elementBox, containerBox);
-    }
+        if (!fitHorizontal) {
+            stateCopy = horizReposition(stateCopy, targetBox, elementBox, constraint.to, targetOffset, elementOffset);
+        } else if (stateCopy.tAnchorHoriz !== tAnchorHoriz || stateCopy.eAnchorHoriz !== eAnchorHoriz){
+            stateCopy = horizReposition(stateCopy, targetBox, elementBox, constraint.to, targetOffset, elementOffset);
+        }
 
-    return stateCopy;
+        if (!fitVertical) {
+            stateCopy = vertReposition(stateCopy, targetBox, elementBox, constraint.to, targetOffset, elementOffset);
+        } else if (stateCopy.tAnchorVert !== tAnchorVert || stateCopy.eAnchorVert !== eAnchorVert) {
+            stateCopy = vertReposition(stateCopy, targetBox, elementBox, constraint.to, targetOffset, elementOffset);
+        }
+    });
+
+    return Object.assign({}, stateCopy, calcPosition(stateCopy, targetBox, elementBox, targetOffset, elementOffset));
 }
 
 export function position({
@@ -335,21 +329,13 @@ export function position({
     tAnchorVert,
     eAnchorHoriz,
     eAnchorVert,
-    containerBox,
+    viewportBox,
     constraints,
-    targetOffset, elementOffset
+    targetOffset,
+    elementOffset
 }) {
-    // const fitting = isFitInBoundingBox(elementBox, containerBox);
-    // const {fitHorizontal, fitVertical} = fitting;
+    stateCopy = applyConstraints(
+        {stateCopy, elementBox, targetBox, tAnchorHoriz, tAnchorVert, eAnchorHoriz, eAnchorVert, viewportBox, constraints, targetOffset, elementOffset});
 
-    constraints.forEach(constraint => {
-            console.log(boxIntersections(elementBox, constraint.to));
-        // if (isOutOfBoundingBox(elementBox, constraint.to)) { }
-    });
-
-    targetBox = getTargetBox(targetBox);
-    elementBox = getElementBox(elementBox);
-    // stateCopy = applyConstraints(constraints, stateCopy);
-
-    return Object.assign({}, stateCopy, calcPosition(stateCopy, constraints, targetBox, elementBox, targetOffset, elementOffset))
+    return stateCopy;
 }
