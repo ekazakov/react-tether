@@ -67,11 +67,6 @@ export function isFitInBoundingBox(elementBox, containerBox) {
     return {fitHorizontal, fitVertical};
 }
 
-export function isOutOfBoundingBox(...args) {
-    const {fitHorizontal, fitVertical} = isFitInBoundingBox(...args);
-    return !fitHorizontal || !fitVertical;
-}
-
 function boxIntersections(elementBox, containerBox) {
     let overTop = false;
     let overLeft = false;
@@ -183,67 +178,31 @@ export function calcPosition(
     let transformLeft = 0;
 
     if (tAnchorHoriz === LEFT) {
-        if (eAnchorHoriz === LEFT) {
-            elemLeft = targetBox.left + targetHorizOffset;
-        } else if (eAnchorHoriz === CENTER) {
-            elemLeft = targetBox.left + targetHorizOffset;
-            transformLeft = -50;
-        } else if (eAnchorHoriz === RIGHT) {
-            elemLeft = targetBox.left + targetHorizOffset;
-            transformLeft = -100;
-        }
+        elemLeft = targetBox.left + targetHorizOffset;
     } else if (tAnchorHoriz === CENTER) {
-        if (eAnchorHoriz === LEFT) {
-            elemLeft = midX + targetHorizOffset;
-        } else if (eAnchorHoriz === CENTER) {
-            elemLeft = midX + targetHorizOffset;
-            transformLeft = -50;
-        } else if (eAnchorHoriz === RIGHT) {
-            elemLeft = midX + targetHorizOffset;
-            transformLeft = -100;
-        }
+        elemLeft = midX + targetHorizOffset;
     } else if (tAnchorHoriz === RIGHT) {
-        if (eAnchorHoriz === LEFT) {
-            elemLeft = targetBox.right + targetHorizOffset;
-        } else if (eAnchorHoriz === CENTER) {
-            elemLeft = targetBox.right + targetHorizOffset;
-            transformLeft = -50;
-        } else if (eAnchorHoriz === RIGHT) {
-            elemLeft = targetBox.right + targetHorizOffset;
-            transformLeft = -100;
-        }
+        elemLeft = targetBox.right + targetHorizOffset;
     }
 
     if (tAnchorVert === TOP) {
-        if (eAnchorVert === TOP) {
-            elemTop = targetBox.top + targetVertOffset;
-        } else if (eAnchorVert === CENTER) {
-            elemTop = targetBox.top + targetVertOffset;
-            transformTop = -50;
-        } else if (eAnchorVert === BOTTOM) {
-            elemTop = targetBox.top + targetVertOffset;
-            transformTop = -100;
-        }
+        elemTop = targetBox.top + targetVertOffset;
     } else if (tAnchorVert === CENTER) {
-        if (eAnchorVert === TOP) {
-            elemTop = midY + targetVertOffset;
-        } else if (eAnchorVert === CENTER) {
-            elemTop = midY + targetVertOffset;
-            transformTop = -50;
-        } else if (eAnchorVert === BOTTOM) {
-            elemTop = midY + targetVertOffset;
-            transformTop = -100;
-        }
+        elemTop = midY + targetVertOffset;
     } else if (tAnchorVert === BOTTOM) {
-        if (eAnchorVert === TOP) {
-            elemTop = targetBox.bottom + targetVertOffset;
-        } else if (eAnchorVert === CENTER) {
-            elemTop = targetBox.bottom + targetVertOffset;
-            transformTop = -50;
-        } else if (eAnchorVert === BOTTOM) {
-            elemTop = targetBox.bottom + targetVertOffset;
-            transformTop = -100;
-        }
+        elemTop = targetBox.bottom + targetVertOffset;
+    }
+
+    if (eAnchorHoriz === CENTER) {
+        transformLeft = -50;
+    } else if (eAnchorHoriz === RIGHT) {
+        transformLeft = -100;
+    }
+
+    if (eAnchorVert === CENTER) {
+        transformTop = -50;
+    } else if (eAnchorVert === BOTTOM) {
+        transformTop = -100;
     }
 
     elemTop = Math.round(elemTop + transformTop / 100 * elementBox.height + elementVertOffset);
@@ -302,7 +261,7 @@ function applyConstraints({
     if (constraints.length === 0) {
         return stateCopy;
     }
-    
+
     const {fitHorizontal, fitVertical} = isFitInAllConstraints(elementBox, constraints);
 
     if (!fitVertical) {
