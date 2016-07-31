@@ -1,8 +1,15 @@
 import React from 'react'
 import {findDOMNode} from 'react-dom';
-import {getScrollParents, position, isElement} from './utils';
+let utils = require('./utils');
 
-export class Tether extends React.Component {
+if (module.hot) {
+    // Enable Webpack hot module replacement for reducers
+    module.hot.accept('./utils', () => {
+        utils = require('./utils');
+    });
+}
+
+export class TetherPanel extends React.Component {
     constructor(props, ...args) {
         super(props, ...args);
         const [tAnchorHoriz, tAnchorVert] = this.props.targetAnchor.split(' ');
@@ -18,40 +25,42 @@ export class Tether extends React.Component {
     }
 
     prepareConstraints(constraints) {
-        return constraints.map(constraint => {
-            if (isElement(constraint.to)) {
-                return constraint.to.getBoundingClientRect();
+        return constraints.reduce((newConstraints, constraint) => {
+            let box;
+
+            if (utils.isElement(constraint.to)) {
+                box = constraint.to.getBoundingClientRect();
             }
 
             if (constraint.to === 'scroll-parent') {
-                const scrollParents = getScrollParents(this.props.targetElement);
+                const scrollParents = utils.getScrollParents(this.props.targetElement);
 
                 if (scrollParents.length > 0) {
-                    constraint.to = scrollParents[0].getBoundingClientRect();
+                    box = scrollParents[0].getBoundingClientRect();
                 } else {
-                    constraint.to = 'window';
+                    box = 'window';
                 }
             }
 
-            if (constraint.to === 'window') {
-                constraint.to = {
+            if (constraint.to === 'window' || box === 'window') {
+                box = {
                     top: 0, left: 0, right: window.innerWidth, bottom: window.innerHeight, width: window.innerWidth, height: window.innerHeight
                 };
             }
 
-            return constraint;
-        });
+            return newConstraints.concat({...constraint, to: box})
+        }, []);
     }
 
-    reposition = () => {
-        const [tAnchorHoriz, tAnchorVert] = this.props.targetAnchor.split(' ');
-        const [eAnchorHoriz, eAnchorVert] = this.props.elementAnchor.split(' ');
+    _reposition(props) {
+        const [tAnchorHoriz, tAnchorVert] = props.targetAnchor.split(' ');
+        const [eAnchorHoriz, eAnchorVert] = props.elementAnchor.split(' ');
         const elementBox = findDOMNode(this).getBoundingClientRect();
-        const targetBox = this.props.targetElement.getBoundingClientRect();
-        const viewportBox = {top: 0, left: 0, right: window.innerWidth, bottom: window.innerHeight};
-        const {targetOffset, elementOffset, } = this.props;
-        const constraints = this.prepareConstraints(this.props.constraints);
-        const newState = position({
+        const targetBox = props.targetElement.getBoundingClientRect();
+        // const viewportBox = {top: 0, left: 0, right: window.innerWidth, bottom: window.innerHeight};
+        const {targetOffset, elementOffset} = props;
+        const constraints = this.prepareConstraints(props.constraints);
+        const newState = utils.position({
             stateCopy: {...this.state},
             tAnchorHoriz,
             tAnchorVert,
@@ -59,20 +68,24 @@ export class Tether extends React.Component {
             eAnchorVert,
             elementBox,
             targetBox,
-            viewportBox,
             constraints,
             targetOffset,
             elementOffset
         });
 
         this.setState(newState);
+    }
+
+    reposition = () => {
+        // console.log('reposition', this.props.elementAnchor);
+        this._reposition(this.props);
     };
 
     componentDidMount() {
         window.addEventListener('resize', this.reposition);
         window.addEventListener('scroll', this.reposition);
         window.addEventListener('touchmove', this.reposition);
-        this.scrollParents = getScrollParents(this.props.targetElement);
+        this.scrollParents = utils.getScrollParents(this.props.targetElement);
         this.scrollParents.forEach(parent => parent.addEventListener('scroll', this.reposition));
         this.reposition();
     }
@@ -84,12 +97,18 @@ export class Tether extends React.Component {
         window.removeEventListener('touchmove', this.reposition);
     }
 
+    componentWillReceiveProps(nextProps) {
+        console.log('componentWillReceiveProps');
+        this._reposition(nextProps);
+    }
+
     render() {
+        // console.log('eAnchorHoriz', this.state.eAnchorHoriz);
         const {elemTop, elemLeft, visibility} = this.state;
         const style = {
             top: 0,
             left: 0,
-            transform: `translate3D(${elemLeft}px, ${elemTop}px, 0)`,
+            transform: `translate3D(${elemLeft + window.pageXOffset}px, ${elemTop + window.pageYOffset}px, 0)`,
             visibility
         };
 

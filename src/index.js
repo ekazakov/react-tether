@@ -2,19 +2,17 @@ import React, {Children, cloneElement} from 'react'
 import ReactDOM, {unstable_renderSubtreeIntoContainer as renderSubtreeIntoContainer} from 'react-dom';
 import './Tether.css';
 
-import {Tether} from './Tether';
+import {TetherPanel} from './TetherPanel';
 window.ReactDOM = ReactDOM;
 const {toArray} = Children;
 
 
-export default class Tooltip extends React.Component {
+export default class Tether extends React.Component {
     renderTether() {
         const target = ReactDOM.findDOMNode(this);
-        // console.log('target:', target);
-        // console.log(this.props);
         const {targetAnchor, elementAnchor, targetOffset, elementOffset, constraints} = this.props;
         renderSubtreeIntoContainer(this,
-            <Tether
+            <TetherPanel
                 targetOffset={targetOffset}
                 elementOffset={elementOffset}
                 targetElement={target}
@@ -28,10 +26,9 @@ export default class Tooltip extends React.Component {
     }
 
     componentWillMount() {
-        // console.log('will mount');
         this.containerElement = document.createElement('div');
         this.containerElement.id = 'containerElement';
-        this.containerElement.style.visibility = 'hidden';
+        // this.containerElement.style.visibility = 'hidden';
         document.body.appendChild(this.containerElement);
     }
 
@@ -44,15 +41,14 @@ export default class Tooltip extends React.Component {
     }
     
     componentWillUnmount() {
-        console.log('will unmount');
     }
-
-    show = () => {
-        this.containerElement.style.visibility = 'visible';
-    };
-    hide = () => {
-        // this.containerElement.style.visibility = 'hidden';
-    };
+    
+    // show = () => {
+    //     this.containerElement.style.visibility = 'visible';
+    // };
+    // hide = () => {
+    //     // this.containerElement.style.visibility = 'hidden';
+    // };
 
     render() {
         const children = toArray(this.props.children);
@@ -64,9 +60,6 @@ export default class Tooltip extends React.Component {
             return child.props['data-tooltip-content'];
         });
 
-        return cloneElement(target, {
-            onMouseOver: this.show,
-            onMouseOut: this.hide
-        });
+        return cloneElement(target, {});
     }
 }

@@ -56,11 +56,11 @@ export function isFitInBoundingBox(elementBox, containerBox) {
     let fitHorizontal = true;
     const {left, right, top, bottom} = elementBox;
 
-    if (left < containerBox.left || right > containerBox.right) {
+    if (left <= containerBox.left || right >= containerBox.right) {
         fitHorizontal = false;
     }
 
-    if (top < containerBox.top || bottom > containerBox.bottom) {
+    if (top <= containerBox.top || bottom >= containerBox.bottom) {
         fitVertical = false;
     }
 
@@ -251,38 +251,40 @@ export function calcPosition(
     return {elemTop, elemLeft};
 }
 
-export function horizReposition(stateCopy, targetBB, clientBB, containerBox, targetOffset, elementOffset) {
+export function repositionHorizontally(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset) {
     const {elemTop, elemLeft} = calcPosition(
-        {...stateCopy, ...mirrorAnchorHorizontal(stateCopy)}, targetBB, clientBB, targetOffset, elementOffset);
-    const top = elemTop;
-    const left = elemLeft;
-    const bottom = top + clientBB.height;
-    const right = left + clientBB.width;
+        {...stateCopy, ...mirrorAnchorHorizontal(stateCopy)}, targetBox, elementBox, targetOffset, elementOffset);
+    elementBox = constructElementBox(elementBox, {elemTop, elemLeft});
+    const {fitHorizontal} = isFitInAllConstraints(elementBox, constraints);
 
-    let fitH = isFitInBoundingBox({top, left, bottom, right}, containerBox).fitHorizontal;
-
-    if (fitH) {
+    if (fitHorizontal) {
         return Object.assign({}, stateCopy, mirrorAnchorHorizontal(stateCopy));
     }
 
     return stateCopy;
 }
 
-export function vertReposition(stateCopy, targetBB, clientBB, containerBox, targetOffset, elementOffset) {
+export function repositionVertically(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset) {
     const {elemTop, elemLeft} = calcPosition(
-        {...stateCopy, ...mirrorAnchorVeritcal(stateCopy)}, targetBB, clientBB, targetOffset, elementOffset);
-    const top = elemTop;
-    const left = elemLeft;
-    const bottom = top + clientBB.height;
-    const right = left + clientBB.width;
+        {...stateCopy, ...mirrorAnchorVeritcal(stateCopy)}, targetBox, elementBox, targetOffset, elementOffset);
 
-    const fitV = isFitInBoundingBox({top, left, bottom, right}, containerBox).fitVertical;
+    elementBox = constructElementBox(elementBox, {elemTop, elemLeft});
+    const {fitVertical} = isFitInAllConstraints(elementBox, constraints);
 
-    if (fitV) {
+    if (fitVertical) {
         return Object.assign({}, stateCopy, mirrorAnchorVeritcal(stateCopy));
     }
 
     return stateCopy;
+}
+
+function isFitInAllConstraints(elementBox, constraints) {
+    return constraints.reduce((result, constraint) => {
+        const {fitHorizontal, fitVertical} = isFitInBoundingBox(elementBox, constraint.to);
+        result.fitHorizontal = result.fitHorizontal ? fitHorizontal : false;
+        result.fitVertical = result.fitVertical ? fitVertical : false;
+        return result;
+    }, {fitHorizontal: true, fitVertical: true});
 }
 
 function applyConstraints({
@@ -293,7 +295,6 @@ function applyConstraints({
     tAnchorVert,
     eAnchorHoriz,
     eAnchorVert,
-    viewportBox,
     constraints,
     targetOffset,
     elementOffset
@@ -301,24 +302,60 @@ function applyConstraints({
     if (constraints.length === 0) {
         return stateCopy;
     }
+    
+    const {fitHorizontal, fitVertical} = isFitInAllConstraints(elementBox, constraints);
 
-    constraints.forEach(constraint => {
-        const {fitHorizontal, fitVertical} = isFitInBoundingBox(elementBox, constraint.to);
+    if (!fitVertical) {
+        stateCopy = repositionVertically(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset);
+    } else if (stateCopy.tAnchorVert !== tAnchorVert || stateCopy.eAnchorVert !== eAnchorVert) {
+        stateCopy = repositionVertically(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset);
+    }
 
-        if (!fitHorizontal) {
-            stateCopy = horizReposition(stateCopy, targetBox, elementBox, constraint.to, targetOffset, elementOffset);
-        } else if (stateCopy.tAnchorHoriz !== tAnchorHoriz || stateCopy.eAnchorHoriz !== eAnchorHoriz){
-            stateCopy = horizReposition(stateCopy, targetBox, elementBox, constraint.to, targetOffset, elementOffset);
+    if (!fitHorizontal) {
+        stateCopy = repositionHorizontally(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset);
+    } else if (stateCopy.tAnchorHoriz !== tAnchorHoriz || stateCopy.eAnchorHoriz !== eAnchorHoriz){
+        stateCopy = repositionHorizontally(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset);
+    }
+
+    return stateCopy;
+}
+
+function constructElementBox(elementBox, {elemLeft, elemTop}) {
+    return {
+        height: elementBox.height,
+        width: elementBox.width,
+        top: elemTop,
+        left: elemLeft,
+        right: elemLeft + elementBox.width,
+        bottom: elemTop + elementBox.height,
+    };
+}
+
+function applyPin({stateCopy, elementBox, constraints}) {
+    const pins = constraints.filter(({pin}) => pin);
+    pins.forEach(pin => {
+        const {overTop, overLeft, overBottom, overRight} = boxIntersections(elementBox, pin.to);
+
+        if (overTop) {
+            stateCopy = Object.assign({}, stateCopy, {elemTop: pin.to.top});
         }
 
-        if (!fitVertical) {
-            stateCopy = vertReposition(stateCopy, targetBox, elementBox, constraint.to, targetOffset, elementOffset);
-        } else if (stateCopy.tAnchorVert !== tAnchorVert || stateCopy.eAnchorVert !== eAnchorVert) {
-            stateCopy = vertReposition(stateCopy, targetBox, elementBox, constraint.to, targetOffset, elementOffset);
+        if (overBottom) {
+            stateCopy = Object.assign({}, stateCopy, {elemTop: pin.to.bottom - elementBox.height});
         }
+
+        if (overLeft) {
+            stateCopy = Object.assign({}, stateCopy, {elemLeft: pin.to.left});
+        }
+
+        if (overRight) {
+            stateCopy = Object.assign({}, stateCopy, {elemLeft: pin.to.right - elementBox.width});
+        }
+
+        elementBox = constructElementBox(elementBox, stateCopy);
     });
 
-    return Object.assign({}, stateCopy, calcPosition(stateCopy, targetBox, elementBox, targetOffset, elementOffset));
+    return stateCopy;
 }
 
 export function position({
@@ -329,13 +366,17 @@ export function position({
     tAnchorVert,
     eAnchorHoriz,
     eAnchorVert,
-    viewportBox,
     constraints,
     targetOffset,
     elementOffset
 }) {
     stateCopy = applyConstraints(
-        {stateCopy, elementBox, targetBox, tAnchorHoriz, tAnchorVert, eAnchorHoriz, eAnchorVert, viewportBox, constraints, targetOffset, elementOffset});
+        {stateCopy, elementBox, targetBox, tAnchorHoriz, tAnchorVert, eAnchorHoriz, eAnchorVert, constraints, targetOffset, elementOffset});
 
+    stateCopy = Object.assign({}, stateCopy, calcPosition(stateCopy, targetBox, elementBox, targetOffset, elementOffset));
+
+    elementBox = constructElementBox(elementBox, stateCopy);
+
+    stateCopy = applyPin({constraints, elementBox, stateCopy});
     return stateCopy;
 }
