@@ -2,7 +2,7 @@ import React from 'react'
 import {render} from 'react-dom'
 import './index.css';
 
-import Tooltip from '../../src';
+import Tether from '../../src';
 
 function Form(props) {
     return <form>{props.children}</form>;
@@ -26,7 +26,8 @@ let Demo = class extends React.Component {
     constructor(...args) {
         super(...args);
         this.state = {
-            counter: 0
+            counter: 0,
+            elementAnchor: "left top"
         };
 
         // const handler = setInterval(() => {
@@ -43,9 +44,9 @@ let Demo = class extends React.Component {
         return <div className="" >
             <div className="scroll-box">
                 <div className="content">
-                <Tooltip
+                <Tether
                          targetAnchor="right top"
-                         elementAnchor="left top"
+                         elementAnchor={this.state.elementAnchor}
                          targetOffset="0% 0"
                          elementOffset="0% 0%"
                          constraints={[
@@ -57,16 +58,17 @@ let Demo = class extends React.Component {
                                },
                                {
                                    to: 'window',
-                               }
+                                   pin: true,
+                               },
                          ]}
                 >
                     <div data-tooltip-target type="button" className="target" />
-                    <div data-tooltip-content style={{width: 100, height: 300}}>
+                    <div data-tooltip-content style={{width: 200, height: 200}}>
                         <div style={{padding: 20}}>
                             Hello Dick! LOL! {this.state.counter}
                         </div>
                     </div>
-                </Tooltip>
+                </Tether>
                 </div>
             </div>
 
@@ -74,6 +76,10 @@ let Demo = class extends React.Component {
 
         </div>
     }
+
+    flip() {
+        this.setState({elementAnchor: "left bottom"});
+    }
 };
 
-render(<Demo/>, document.querySelector('#demo'));
+window.demo = render(<Demo/>, document.querySelector('#demo'));
