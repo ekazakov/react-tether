@@ -1,25 +1,7 @@
 import React from 'react'
 import {render} from 'react-dom'
 import './index.css';
-
 import Tether from '../../src';
-
-function Form(props) {
-    return <form>{props.children}</form>;
-}
-
-class Block extends React.Component {
-    render() {
-        return <div className="form-group">{this.props.children}</div>;
-    }
-}
-
-function FormGroup(props) {
-    return <Block >
-        <label htmlFor={props.id}>{props.title}</label>
-        <input type={props.type} className="form-control" id={props.id} placeholder={props.placeholder}/>
-    </Block>;
-}
 
 let Demo = class extends React.Component {
 
@@ -29,27 +11,19 @@ let Demo = class extends React.Component {
             counter: 0,
             elementAnchor: "left top"
         };
-
-        // const handler = setInterval(() => {
-        //     if (this.state.counter > 20) {
-        //         clearInterval(handler);
-        //         return;
-        //     }
-        //
-        //     this.setState({counter: this.state.counter + 1});
-        // }, 1000);
     }
 
     render() {
         return <div className="" >
             <div className="scroll-box">
                 <div className="content">
-                <Tether
-                         targetAnchor="right top"
-                         elementAnchor={this.state.elementAnchor}
-                         targetOffset="0% 0"
-                         elementOffset="0% 0%"
-                         constraints={[
+                    <Tether
+                        target={document.body}
+                        targetAnchor="center top"
+                        elementAnchor="center top"
+                        targetOffset="0% 0%"
+                        elementOffset="0% 0"
+                        constraints={[
                                {
                                     to: 'scroll-parent',
                                     attachment: 'together',
@@ -61,14 +35,14 @@ let Demo = class extends React.Component {
                                    pin: true,
                                },
                          ]}
-                >
-                    <div data-tooltip-target type="button" className="target" />
-                    <div data-tooltip-content style={{width: 200, height: 200}}>
-                        <div style={{padding: 20}}>
-                            Hello Dick! LOL! {this.state.counter}
+                    >
+                        <div style={{width: 200, height: 200}}>
+                            <div style={{padding: 20}}>
+                                Hello Dick! LOL! {this.state.counter}
+                            </div>
                         </div>
-                    </div>
-                </Tether>
+                    </Tether>
+                    <div type="button" className="target" ref={(ref) => this.foo = ref}></div>
                 </div>
             </div>
 

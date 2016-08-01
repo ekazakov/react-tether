@@ -4,12 +4,27 @@ import './Tether.css';
 
 import {TetherPanel} from './TetherPanel';
 window.ReactDOM = ReactDOM;
-const {toArray} = Children;
+
+let utils = require('./utils');
+
+if (module.hot) {
+    // Enable Webpack hot module replacement for reducers
+    module.hot.accept('./utils', () => {
+        utils = require('./utils');
+    });
+}
 
 
 export default class Tether extends React.Component {
     renderTether() {
-        const target = ReactDOM.findDOMNode(this);
+        let target;
+
+        if (utils.isElement(this.props.target)) {
+            target = this.props.target;
+        } else {
+            target = document.querySelector(this.props.target);
+        }
+
         const {targetAnchor, elementAnchor, targetOffset, elementOffset, constraints} = this.props;
         renderSubtreeIntoContainer(this,
             <TetherPanel
@@ -26,10 +41,11 @@ export default class Tether extends React.Component {
     }
 
     componentWillMount() {
+        this.content = this.props.children;
         this.containerElement = document.createElement('div');
         this.containerElement.id = 'containerElement';
-        // this.containerElement.style.visibility = 'hidden';
         document.body.appendChild(this.containerElement);
+
     }
 
     componentDidUpdate() {
@@ -42,24 +58,8 @@ export default class Tether extends React.Component {
     
     componentWillUnmount() {
     }
-    
-    // show = () => {
-    //     this.containerElement.style.visibility = 'visible';
-    // };
-    // hide = () => {
-    //     // this.containerElement.style.visibility = 'hidden';
-    // };
 
     render() {
-        const children = toArray(this.props.children);
-        const target = children.find(child => {
-            return child.props['data-tooltip-target'];
-        });
-
-        this.content = children.find(child => {
-            return child.props['data-tooltip-content'];
-        });
-
-        return cloneElement(target, {});
+        return null;
     }
 }

@@ -56,11 +56,11 @@ export function isFitInBoundingBox(elementBox, containerBox) {
     let fitHorizontal = true;
     const {left, right, top, bottom} = elementBox;
 
-    if (left <= containerBox.left || right >= containerBox.right) {
+    if (left < containerBox.left || right > containerBox.right) {
         fitHorizontal = false;
     }
 
-    if (top <= containerBox.top || bottom >= containerBox.bottom) {
+    if (top < containerBox.top || bottom > containerBox.bottom) {
         fitVertical = false;
     }
 
@@ -265,6 +265,10 @@ function applyConstraints({
     const {fitHorizontal, fitVertical} = isFitInAllConstraints(elementBox, constraints);
 
     if (!fitVertical) {
+        // debugger;
+    }
+
+    if (!fitVertical) {
         stateCopy = repositionVertically(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset);
     } else if (stateCopy.tAnchorVert !== tAnchorVert || stateCopy.eAnchorVert !== eAnchorVert) {
         stateCopy = repositionVertically(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset);
@@ -292,29 +296,35 @@ function constructElementBox(elementBox, {elemLeft, elemTop}) {
 
 function applyPin({stateCopy, elementBox, constraints}) {
     const pins = constraints.filter(({pin}) => pin);
+    //[top, bottom, left, right]
+    const pinedTo = {top: false, left: false, right: false, bottom: false};
     pins.forEach(pin => {
         const {overTop, overLeft, overBottom, overRight} = boxIntersections(elementBox, pin.to);
 
         if (overTop) {
             stateCopy = Object.assign({}, stateCopy, {elemTop: pin.to.top});
+            pinedTo.top = true;
         }
 
         if (overBottom) {
             stateCopy = Object.assign({}, stateCopy, {elemTop: pin.to.bottom - elementBox.height});
+            pinedTo.bottom = true;
         }
 
         if (overLeft) {
             stateCopy = Object.assign({}, stateCopy, {elemLeft: pin.to.left});
+            pinedTo.left = true;
         }
 
         if (overRight) {
             stateCopy = Object.assign({}, stateCopy, {elemLeft: pin.to.right - elementBox.width});
+            pinedTo.right = true;
         }
 
         elementBox = constructElementBox(elementBox, stateCopy);
     });
 
-    return stateCopy;
+    return Object.assign({}, stateCopy, {pinedTo});
 }
 
 export function position({

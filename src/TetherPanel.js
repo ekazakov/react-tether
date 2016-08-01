@@ -102,14 +102,33 @@ export class TetherPanel extends React.Component {
         this._reposition(nextProps);
     }
 
+    isPined({top = false, left = false, bottom = false, right = false} = {}) {
+        return top || left || bottom || right;
+    }
+
     render() {
-        // console.log('eAnchorHoriz', this.state.eAnchorHoriz);
-        const {elemTop, elemLeft, visibility} = this.state;
+        const {
+            elemTop,
+            elemLeft,
+            visibility,
+            pinedTo
+        } = this.state;
+
+        let xOffset = window.pageXOffset;
+        let yOffset = window.pageYOffset;
+        let position = 'absolute';
+
+        if (this.isPined(pinedTo)) {
+            xOffset = yOffset = 0;
+            position = 'fixed';
+        }
+
         const style = {
             top: 0,
             left: 0,
-            transform: `translate3D(${elemLeft + window.pageXOffset}px, ${elemTop + window.pageYOffset}px, 0)`,
-            visibility
+            transform: `translate3D(${elemLeft + xOffset}px, ${elemTop + yOffset}px, 0)`,
+            visibility,
+            position
         };
 
         return <div className="TooltipBody" style={style}>
