@@ -13,12 +13,12 @@ body {
 }
 
 .scroll-box {
-    /*width: 500px;*/
-    /*height: 650px;*/
-    /*overflow: auto;*/
-    /*border: 1px solid;*/
-    /*margin: 10px;*/
-    /*margin-top: 100px;*/
+    width: 500px;
+    height: 650px;
+    overflow: auto;
+    border: 1px solid;
+    margin: 10px;
+    margin-top: 100px;
 }
 
 .content {

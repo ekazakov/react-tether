@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {cloneElement} from 'react'
 import {findDOMNode} from 'react-dom';
 let utils = require('./utils');
 
@@ -131,8 +131,8 @@ export class TetherPanel extends React.Component {
             position
         };
 
-        return <div className="TooltipBody" style={style}>
-            {this.props.content}
+        return <div className={this.props.className} style={style}>
+            {cloneElement(this.props.content, {pinedTo: pinedTo || {}})}
         </div>;
     }
 }

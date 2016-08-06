@@ -1,9 +1,6 @@
 import React, {Children, cloneElement} from 'react'
 import ReactDOM, {unstable_renderSubtreeIntoContainer as renderSubtreeIntoContainer} from 'react-dom';
-import './Tether.css';
-
 import {TetherPanel} from './TetherPanel';
-window.ReactDOM = ReactDOM;
 
 let utils = require('./utils');
 
@@ -13,7 +10,6 @@ if (module.hot) {
         utils = require('./utils');
     });
 }
-
 
 export default class Tether extends React.Component {
     renderTether() {
@@ -25,17 +21,12 @@ export default class Tether extends React.Component {
             target = document.querySelector(this.props.target);
         }
 
-        const {targetAnchor, elementAnchor, targetOffset, elementOffset, constraints} = this.props;
         renderSubtreeIntoContainer(this,
             <TetherPanel
-                targetOffset={targetOffset}
-                elementOffset={elementOffset}
                 targetElement={target}
-                containerElement={this.containerElement}
                 content={this.content}
-                targetAnchor={targetAnchor}
-                elementAnchor={elementAnchor}
-                constraints={constraints}
+                containerElement={this.containerElement}
+                {...this.props}
             />,
         this.containerElement);
     }
@@ -57,9 +48,10 @@ export default class Tether extends React.Component {
     }
     
     componentWillUnmount() {
+        ReactDOM.unmountComponentAtNode(this.containerElement)
     }
 
     render() {
-        return null;
+        return <noscript></noscript>;
     }
 }

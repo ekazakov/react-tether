@@ -1,0 +1,31 @@
+.menuContainer {
+    width: 100%;
+}
+
+.menu {
+    width: 700px;
+    margin: 0 auto;
+    border: 1px solid #bebeff;
+    border-radius: 5px;
+    display: flex;
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    font-weight: bold;
+    color: #047fec;
+}
+
+.pinned {
+    width: 100vw;
+    border-radius: 0;
+}
+
+.menuItem {
+    height: 50px;
+    line-height: 50px;
+    flex-grow: 1;
+    text-align: center;
+    border-right: 1px solid #bebeff;
+}
+
+.menuItem:last-child {
+    border: none;
+}

@@ -264,9 +264,9 @@ function applyConstraints({
 
     const {fitHorizontal, fitVertical} = isFitInAllConstraints(elementBox, constraints);
 
-    if (!fitVertical) {
-        // debugger;
-    }
+    const hasAttachments = constraints.filter(constraint => constraint.attachment).length > 0;
+
+    
 
     if (!fitVertical) {
         stateCopy = repositionVertically(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset);

@@ -3,6 +3,14 @@ import {render} from 'react-dom'
 import './index.css';
 import Tether from '../../src';
 
+const Panel = (props) => (
+    <div style={{width: 200, height: 200, border: '1px solid #f7d9a4', backgroundColor: '#f7d9a4'}}>
+        <div style={{padding: 20}}>
+            Hello Dick! LOL!
+        </div>
+    </div>
+);
+
 let Demo = class extends React.Component {
 
     constructor(...args) {
@@ -18,31 +26,27 @@ let Demo = class extends React.Component {
             <div className="scroll-box">
                 <div className="content">
                     <Tether
-                        target={document.body}
-                        targetAnchor="center top"
-                        elementAnchor="center top"
-                        targetOffset="0% 0%"
-                        elementOffset="0% 0"
+                        target=".target"
+                        targetAnchor="right top"
+                        elementAnchor="left top"
+                        targetOffset="0 0"
+                        elementOffset="0 0"
                         constraints={[
                                {
                                     to: 'scroll-parent',
                                     attachment: 'together',
-                                    pin: true,
+                                    // pin: true,
                                     outOfBounds: 'hide'
                                },
                                {
                                    to: 'window',
-                                   pin: true,
+                                   // pin: true,
                                },
                          ]}
                     >
-                        <div style={{width: 200, height: 200}}>
-                            <div style={{padding: 20}}>
-                                Hello Dick! LOL! {this.state.counter}
-                            </div>
-                        </div>
+                        <Panel/>
                     </Tether>
-                    <div type="button" className="target" ref={(ref) => this.foo = ref}></div>
+                    <div type="button" className="target" ></div>
                 </div>
             </div>
 
