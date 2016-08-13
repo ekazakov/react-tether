@@ -1,7 +1,7 @@
 import React from 'react'
 import {render} from 'react-dom'
 import './index.css';
-import Tether from '../../src';
+import Tether from '../../src/Tether';
 
 const Panel = (props) => (
     <div style={{width: 200, height: 200, border: '1px solid #f7d9a4', backgroundColor: '#f7d9a4'}}>
@@ -34,12 +34,13 @@ let Demo = class extends React.Component {
                         constraints={[
                                {
                                     to: 'scroll-parent',
-                                    attachment: 'together',
+                                    attachment: 'none target',
                                     // pin: true,
-                                    outOfBounds: 'hide'
+                                    // outOfBounds: 'hide'
                                },
                                {
                                    to: 'window',
+                                   // attachment: 'together',
                                    // pin: true,
                                },
                          ]}

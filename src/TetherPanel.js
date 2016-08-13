@@ -25,15 +25,17 @@ export class TetherPanel extends React.Component {
     }
 
     prepareConstraints(constraints) {
-        return constraints.reduce((newConstraints, constraint) => {
+        const {targetElement} = this.props;
+        
+        function formatBoundaries(boundaries) {
             let box;
 
-            if (utils.isElement(constraint.to)) {
-                box = constraint.to.getBoundingClientRect();
+            if (utils.isElement(boundaries)) {
+                box = boundaries.getBoundingClientRect();
             }
 
-            if (constraint.to === 'scroll-parent') {
-                const scrollParents = utils.getScrollParents(this.props.targetElement);
+            if (boundaries === 'scroll-parent') {
+                const scrollParents = utils.getScrollParents(targetElement);
 
                 if (scrollParents.length > 0) {
                     box = scrollParents[0].getBoundingClientRect();
@@ -42,13 +44,33 @@ export class TetherPanel extends React.Component {
                 }
             }
 
-            if (constraint.to === 'window' || box === 'window') {
+            if (boundaries === 'window' || box === 'window') {
                 box = {
                     top: 0, left: 0, right: window.innerWidth, bottom: window.innerHeight, width: window.innerWidth, height: window.innerHeight
                 };
             }
 
-            return newConstraints.concat({...constraint, to: box})
+            return box;
+        }
+
+        function formatAttachment(attachment = 'none none') {
+            const attachments = attachment.split(' ');
+            let verticalAttachment, horizontalAttachment;
+
+            if (attachments.length === 2) {
+                ([verticalAttachment, horizontalAttachment] = attachments);
+            } else {
+                verticalAttachment = horizontalAttachment = attachment;
+            }
+
+            return {verticalAttachment, horizontalAttachment};
+        }
+
+        return constraints.reduce((newConstraints, constraint) => {
+            const box = formatBoundaries(constraint.to);
+            const attachment = formatAttachment(constraint.attachment);
+
+            return newConstraints.concat({...constraint, to: box, attachment})
         }, []);
     }
 

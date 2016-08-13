@@ -1,6 +1,6 @@
 import React from 'react';
 import { storiesOf, action } from '@kadira/storybook';
-import Tether from '../src';
+import Tether from '../src/Tether';
 import {Menu} from './Menu';
 
 

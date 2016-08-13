@@ -106,36 +106,41 @@ function boxIntersections(elementBox, containerBox) {
     return {overTop, overLeft, overBottom, overRight};
 }
 
-export function mirrorAnchorHorizontal({tAnchorHoriz, eAnchorHoriz}) {
-    if (tAnchorHoriz === LEFT) {
-        tAnchorHoriz = RIGHT;
-    } else if (tAnchorHoriz === RIGHT) {
-        tAnchorHoriz = LEFT;
-    }
+export function updateHorizontalAnchor({tAnchorHoriz, eAnchorHoriz}, {horizontalAttachment}) {
+    const anchorMap = {
+        [LEFT]: RIGHT,
+        [RIGHT]: LEFT,
+        [CENTER]: CENTER
+    };
 
-    if (eAnchorHoriz === RIGHT) {
-        eAnchorHoriz = LEFT;
-    } else if (eAnchorHoriz === LEFT) {
-        eAnchorHoriz = RIGHT;
-    }
-
-    return {tAnchorHoriz, eAnchorHoriz};
+    console.log(horizontalAttachment);
+    return {
+        together: () => ({
+            tAnchorHoriz: anchorMap[tAnchorHoriz],
+            eAnchorHoriz: anchorMap[eAnchorHoriz]
+        }),
+        target: () => ({tAnchorHoriz: anchorMap[tAnchorHoriz], eAnchorHoriz}),
+        element: () => ({tAnchorHoriz, eAnchorHoriz: anchorMap[eAnchorHoriz]}),
+        none: () => {tAnchorHoriz, eAnchorHoriz}
+    }[horizontalAttachment]();
 }
 
-export function mirrorAnchorVeritcal({tAnchorVert, eAnchorVert}) {
-    if (tAnchorVert === TOP) {
-        tAnchorVert = BOTTOM;
-    } else if (tAnchorVert === BOTTOM) {
-        tAnchorVert = TOP;
-    }
+export function updateVerticalAnchor({tAnchorVert, eAnchorVert}, {verticalAttachment}) {
+    const anchorMap = {
+        [TOP]: BOTTOM,
+        [BOTTOM]: TOP,
+        [CENTER]: CENTER
+    };
 
-    if (eAnchorVert === BOTTOM) {
-        eAnchorVert = TOP;
-    } else if (eAnchorVert === TOP) {
-        eAnchorVert = BOTTOM;
-    }
-
-    return {tAnchorVert, eAnchorVert};
+    return {
+        together: () => ({
+            tAnchorVert: anchorMap[tAnchorVert],
+            eAnchorVert: anchorMap[eAnchorVert]
+        }),
+        target: () => ({tAnchorVert: anchorMap[tAnchorVert], eAnchorVert}),
+        element: () => ({tAnchorVert, eAnchorVert: anchorMap[eAnchorVert]}),
+        none: () => ({tAnchorVert, eAnchorVert}),
+    }[verticalAttachment]();
 }
 
 function isPercent(str) {
@@ -212,26 +217,26 @@ export function calcPosition(
 
 export function repositionHorizontally(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset) {
     const {elemTop, elemLeft} = calcPosition(
-        {...stateCopy, ...mirrorAnchorHorizontal(stateCopy)}, targetBox, elementBox, targetOffset, elementOffset);
+        {...stateCopy, ...updateHorizontalAnchor(stateCopy)}, targetBox, elementBox, targetOffset, elementOffset);
     elementBox = constructElementBox(elementBox, {elemTop, elemLeft});
     const {fitHorizontal} = isFitInAllConstraints(elementBox, constraints);
 
     if (fitHorizontal) {
-        return Object.assign({}, stateCopy, mirrorAnchorHorizontal(stateCopy));
+        return Object.assign({}, stateCopy, updateHorizontalAnchor(stateCopy));
     }
 
     return stateCopy;
 }
 
 export function repositionVertically(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset) {
-    const {elemTop, elemLeft} = calcPosition(
-        {...stateCopy, ...mirrorAnchorVeritcal(stateCopy)}, targetBox, elementBox, targetOffset, elementOffset);
+    const _stateCopy = {...stateCopy, ...updateVerticalAnchor(stateCopy)};
+    const {elemTop, elemLeft} = calcPosition(_stateCopy, targetBox, elementBox, targetOffset, elementOffset);
 
     elementBox = constructElementBox(elementBox, {elemTop, elemLeft});
     const {fitVertical} = isFitInAllConstraints(elementBox, constraints);
 
     if (fitVertical) {
-        return Object.assign({}, stateCopy, mirrorAnchorVeritcal(stateCopy));
+        return Object.assign({}, stateCopy, updateVerticalAnchor(stateCopy));
     }
 
     return stateCopy;
@@ -261,24 +266,69 @@ function applyConstraints({
     if (constraints.length === 0) {
         return stateCopy;
     }
+    
+    constraints = constraints.filter(({attachment: {verticalAttachment, horizontalAttachment}}) => {
+        return verticalAttachment !== 'none' || horizontalAttachment !== 'none';
+    });
 
     const {fitHorizontal, fitVertical} = isFitInAllConstraints(elementBox, constraints);
 
-    const hasAttachments = constraints.filter(constraint => constraint.attachment).length > 0;
-
-    
-
     if (!fitVertical) {
-        stateCopy = repositionVertically(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset);
+        for (let {attachment} of constraints) {
+            const newState = {...stateCopy, ...updateVerticalAnchor(stateCopy, attachment)};
+            const {elemTop, elemLeft} = calcPosition(newState, targetBox, elementBox, targetOffset, elementOffset);
+            const box = constructElementBox(elementBox, {elemTop, elemLeft});
+            const {fitVertical} = isFitInAllConstraints(box, constraints);
+
+            if (fitVertical) {
+                return newState;
+            }
+        }
     } else if (stateCopy.tAnchorVert !== tAnchorVert || stateCopy.eAnchorVert !== eAnchorVert) {
-        stateCopy = repositionVertically(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset);
+        const newState = Object.assign({}, stateCopy, {tAnchorVert, eAnchorVert});
+        const {elemTop, elemLeft} = calcPosition(newState, targetBox, elementBox, targetOffset, elementOffset);
+        const box = constructElementBox(elementBox, {elemTop, elemLeft});
+        const {fitVertical} = isFitInAllConstraints(box, constraints);
+
+        if (fitVertical) {
+            return newState;
+        }
     }
 
     if (!fitHorizontal) {
-        stateCopy = repositionHorizontally(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset);
-    } else if (stateCopy.tAnchorHoriz !== tAnchorHoriz || stateCopy.eAnchorHoriz !== eAnchorHoriz){
-        stateCopy = repositionHorizontally(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset);
+        for (let {attachment} of constraints) {
+            const newState = {...stateCopy, ...updateHorizontalAnchor(stateCopy, attachment)};
+            const {elemTop, elemLeft} = calcPosition(newState, targetBox, elementBox, targetOffset, elementOffset);
+            const box = constructElementBox(elementBox, {elemTop, elemLeft});
+            const {fitHorizontal} = isFitInAllConstraints(box, constraints);
+
+            if (fitHorizontal) {
+                return newState;
+            }
+        }
+    } else if (stateCopy.tAnchorHoriz !== tAnchorHoriz || stateCopy.eAnchorHoriz !== eAnchorHoriz) {
+        const newState = Object.assign({}, stateCopy, {tAnchorHoriz, eAnchorHoriz});
+        const {elemTop, elemLeft} = calcPosition(newState, targetBox, elementBox, targetOffset, elementOffset);
+        const box = constructElementBox(elementBox, {elemTop, elemLeft});
+        const {fitHorizontal} = isFitInAllConstraints(box, constraints);
+
+        if (fitHorizontal) {
+            return newState;
+        }
     }
+
+    //
+    // if (!fitVertical) {
+    //     stateCopy = repositionVertically(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset);
+    // } else if (stateCopy.tAnchorVert !== tAnchorVert || stateCopy.eAnchorVert !== eAnchorVert) {
+    //     stateCopy = repositionVertically(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset);
+    // }
+    //
+    // if (!fitHorizontal) {
+    //     stateCopy = repositionHorizontally(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset);
+    // } else if (stateCopy.tAnchorHoriz !== tAnchorHoriz || stateCopy.eAnchorHoriz !== eAnchorHoriz){
+    //     stateCopy = repositionHorizontally(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset);
+    // }
 
     return stateCopy;
 }
