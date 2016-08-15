@@ -6,7 +6,7 @@ import Tether from '../../src/Tether';
 const Panel = (props) => (
     <div style={{width: 200, height: 200, border: '1px solid #f7d9a4', backgroundColor: '#f7d9a4'}}>
         <div style={{padding: 20}}>
-            Hello Dick! LOL!
+            Hello! LOL!
         </div>
     </div>
 );
@@ -22,7 +22,8 @@ let Demo = class extends React.Component {
     }
 
     render() {
-        return <div className="" >
+        return <div>
+            <div className="elementContainer"></div>
             <div className="scroll-box">
                 <div className="content">
                     <Tether
@@ -31,11 +32,13 @@ let Demo = class extends React.Component {
                         elementAnchor="left top"
                         targetOffset="0 0"
                         elementOffset="0 0"
+                        container=".elementContainer"
+                        style={{border: '5px solid red'}}
                         constraints={[
                                {
                                     to: 'scroll-parent',
-                                    attachment: 'none target',
-                                    // pin: true,
+                                    attachment: 'together',
+                                    pin: true,
                                     // outOfBounds: 'hide'
                                },
                                {
@@ -50,9 +53,6 @@ let Demo = class extends React.Component {
                     <div type="button" className="target" ></div>
                 </div>
             </div>
-
-
-
         </div>
     }
 

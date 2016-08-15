@@ -56,11 +56,11 @@ export function isFitInBoundingBox(elementBox, containerBox) {
     let fitHorizontal = true;
     const {left, right, top, bottom} = elementBox;
 
-    if (left < containerBox.left || right > containerBox.right) {
+    if (left <= containerBox.left || right >= containerBox.right) {
         fitHorizontal = false;
     }
 
-    if (top < containerBox.top || bottom > containerBox.bottom) {
+    if (top <= containerBox.top || bottom >= containerBox.bottom) {
         fitVertical = false;
     }
 
@@ -113,7 +113,6 @@ export function updateHorizontalAnchor({tAnchorHoriz, eAnchorHoriz}, {horizontal
         [CENTER]: CENTER
     };
 
-    console.log(horizontalAttachment);
     return {
         together: () => ({
             tAnchorHoriz: anchorMap[tAnchorHoriz],
@@ -147,7 +146,7 @@ function isPercent(str) {
     return str[str.length - 1] === '%';
 }
 
-export function parseOffset(offset, {width, height}) {
+export function parseOffset(offset = '0 0', {width, height}) {
     var [horiz, vert] = offset.split(' ');
 
     if (isPercent(vert)) {
@@ -317,19 +316,6 @@ function applyConstraints({
         }
     }
 
-    //
-    // if (!fitVertical) {
-    //     stateCopy = repositionVertically(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset);
-    // } else if (stateCopy.tAnchorVert !== tAnchorVert || stateCopy.eAnchorVert !== eAnchorVert) {
-    //     stateCopy = repositionVertically(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset);
-    // }
-    //
-    // if (!fitHorizontal) {
-    //     stateCopy = repositionHorizontally(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset);
-    // } else if (stateCopy.tAnchorHoriz !== tAnchorHoriz || stateCopy.eAnchorHoriz !== eAnchorHoriz){
-    //     stateCopy = repositionHorizontally(stateCopy, targetBox, elementBox, constraints, targetOffset, elementOffset);
-    // }
-
     return stateCopy;
 }
 
@@ -345,29 +331,29 @@ function constructElementBox(elementBox, {elemLeft, elemTop}) {
 }
 
 function applyPin({stateCopy, elementBox, constraints}) {
-    const pins = constraints.filter(({pin}) => pin);
+    const pinConstraints = constraints.filter(({pin}) => pin);
     //[top, bottom, left, right]
     const pinedTo = {top: false, left: false, right: false, bottom: false};
-    pins.forEach(pin => {
-        const {overTop, overLeft, overBottom, overRight} = boxIntersections(elementBox, pin.to);
+    pinConstraints.forEach(({pin, to}) => {
+        const {overTop, overLeft, overBottom, overRight} = boxIntersections(elementBox, to);
 
-        if (overTop) {
-            stateCopy = Object.assign({}, stateCopy, {elemTop: pin.to.top});
+        if (overTop && pin.top) {
+            stateCopy = Object.assign({}, stateCopy, {elemTop: to.top});
             pinedTo.top = true;
         }
 
-        if (overBottom) {
-            stateCopy = Object.assign({}, stateCopy, {elemTop: pin.to.bottom - elementBox.height});
+        if (overBottom && pin.bottom) {
+            stateCopy = Object.assign({}, stateCopy, {elemTop: to.bottom - elementBox.height});
             pinedTo.bottom = true;
         }
 
-        if (overLeft) {
-            stateCopy = Object.assign({}, stateCopy, {elemLeft: pin.to.left});
+        if (overLeft && pin.left) {
+            stateCopy = Object.assign({}, stateCopy, {elemLeft: to.left});
             pinedTo.left = true;
         }
 
-        if (overRight) {
-            stateCopy = Object.assign({}, stateCopy, {elemLeft: pin.to.right - elementBox.width});
+        if (overRight && pin.right) {
+            stateCopy = Object.assign({}, stateCopy, {elemLeft: to.right - elementBox.width});
             pinedTo.right = true;
         }
 

@@ -10,6 +10,12 @@ if (module.hot) {
 }
 
 export class TetherPanel extends React.Component {
+    static defaultProps = {
+        targetOffset: '0 0',
+        elementOffset: '0 0',
+        constraints: [],
+        style: {}
+    };
     constructor(props, ...args) {
         super(props, ...args);
         const [tAnchorHoriz, tAnchorVert] = this.props.targetAnchor.split(' ');
@@ -28,29 +34,33 @@ export class TetherPanel extends React.Component {
         const {targetElement} = this.props;
         
         function formatBoundaries(boundaries) {
-            let box;
-
-            if (utils.isElement(boundaries)) {
-                box = boundaries.getBoundingClientRect();
-            }
+            const windowBox = {
+                top: 0, left: 0, right: window.innerWidth, bottom: window.innerHeight, width: window.innerWidth, height: window.innerHeight
+            };
 
             if (boundaries === 'scroll-parent') {
                 const scrollParents = utils.getScrollParents(targetElement);
 
                 if (scrollParents.length > 0) {
-                    box = scrollParents[0].getBoundingClientRect();
-                } else {
-                    box = 'window';
+                    return scrollParents[0].getBoundingClientRect();
                 }
+
+                return windowBox;
             }
 
-            if (boundaries === 'window' || box === 'window') {
-                box = {
-                    top: 0, left: 0, right: window.innerWidth, bottom: window.innerHeight, width: window.innerWidth, height: window.innerHeight
-                };
+            if (boundaries === 'window') {
+                return windowBox;
             }
 
-            return box;
+            if (utils.isElement(boundaries)) {
+                return boundaries.getBoundingClientRect();
+            }
+
+            if (typeof boundaries === 'string') {
+                return document.querySelector(boundaries).getBoundingClientRect();
+            }
+
+            throw Error('invalid boundaries')
         }
 
         function formatAttachment(attachment = 'none none') {
@@ -66,11 +76,28 @@ export class TetherPanel extends React.Component {
             return {verticalAttachment, horizontalAttachment};
         }
 
+        function formatPins(pin) {
+            const newPin = {top: false, left: false, right: false, bottom: false};
+
+            if (Array.isArray(pin)) {
+                pin.forEach((item) => {
+                    newPin[item] = item in newPin;
+                });
+
+                return newPin;
+            }
+
+
+
+            return pin ? {top: true, left: true, right: true, bottom: true} : false;
+        }
+
         return constraints.reduce((newConstraints, constraint) => {
             const box = formatBoundaries(constraint.to);
             const attachment = formatAttachment(constraint.attachment);
+            const pin = formatPins(constraint.pin);
 
-            return newConstraints.concat({...constraint, to: box, attachment})
+            return newConstraints.concat({...constraint, to: box, attachment, pin});
         }, []);
     }
 
@@ -82,6 +109,7 @@ export class TetherPanel extends React.Component {
         // const viewportBox = {top: 0, left: 0, right: window.innerWidth, bottom: window.innerHeight};
         const {targetOffset, elementOffset} = props;
         const constraints = this.prepareConstraints(props.constraints);
+        // console.log(constraints);
         const newState = utils.position({
             stateCopy: {...this.state},
             tAnchorHoriz,
@@ -99,7 +127,6 @@ export class TetherPanel extends React.Component {
     }
 
     reposition = () => {
-        // console.log('reposition', this.props.elementAnchor);
         this._reposition(this.props);
     };
 
@@ -120,7 +147,6 @@ export class TetherPanel extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        console.log('componentWillReceiveProps');
         this._reposition(nextProps);
     }
 
@@ -129,28 +155,30 @@ export class TetherPanel extends React.Component {
     }
 
     render() {
-        const {
-            elemTop,
-            elemLeft,
-            visibility,
-            pinedTo
-        } = this.state;
+        const { elemTop, elemLeft, visibility, pinedTo} = this.state;
 
         let xOffset = window.pageXOffset;
         let yOffset = window.pageYOffset;
         let position = 'absolute';
 
-        if (this.isPined(pinedTo)) {
+        if (this.isPined(pinedTo) && this.props.isGlobal) {
             xOffset = yOffset = 0;
             position = 'fixed';
         }
 
+        const transforms = `translate(${elemLeft + xOffset}px, ${elemTop + yOffset}px) translateZ(0)`;
+
         const style = {
             top: 0,
             left: 0,
-            transform: `translate3D(${elemLeft + xOffset}px, ${elemTop + yOffset}px, 0)`,
+            WebkitTransform: transforms,
+            MozTransform: transforms,
+            msTransform: transforms,
+            transform: transforms,
             visibility,
-            position
+            position,
+            zIndex: 1,
+            ...this.props.style
         };
 
         return <div className={this.props.className} style={style}>

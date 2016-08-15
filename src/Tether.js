@@ -12,8 +12,13 @@ if (module.hot) {
 }
 
 export default class Tether extends React.Component {
+    static defaultProps = {
+        container: 'body'
+    };
+
     renderTether() {
         let target;
+        const {target: ignore, children, container, ...restProps} = this.props;
 
         if (utils.isElement(this.props.target)) {
             target = this.props.target;
@@ -21,22 +26,16 @@ export default class Tether extends React.Component {
             target = document.querySelector(this.props.target);
         }
 
+
         renderSubtreeIntoContainer(this,
             <TetherPanel
                 targetElement={target}
-                content={this.content}
+                content={children}
                 containerElement={this.containerElement}
-                {...this.props}
+                isGlobal={container === 'body'}
+                {...restProps}
             />,
         this.containerElement);
-    }
-
-    componentWillMount() {
-        this.content = this.props.children;
-        this.containerElement = document.createElement('div');
-        this.containerElement.id = 'containerElement';
-        document.body.appendChild(this.containerElement);
-
     }
 
     componentDidUpdate() {
@@ -44,6 +43,9 @@ export default class Tether extends React.Component {
     }
 
     componentDidMount() {
+        this.containerElement = document.createElement('div');
+        const container = document.querySelector(this.props.container);
+        container.appendChild(this.containerElement);
         this.renderTether();
     }
     
