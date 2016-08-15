@@ -62,3 +62,47 @@ body {
 .record-header-pinned {
     border-bottom: 1px solid red;
 }
+
+.question {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background-color: #0986cc;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 30px;
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    font-size: 20px;
+}
+
+.question:after {
+    color: #fff;
+    content: '?';
+}
+
+.tooltip {
+    width: 200px;
+    background-color: #fff;
+    box-shadow: 0 1px 1px 1px rgba(0, 0, 0, 0.3);
+    padding: 10px;
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    border-radius: 3px;
+    position: relative;
+    margin: 12px;
+}
+
+.tooltip:after, .tooltip:before {
+    content: ' ';
+    position: absolute;
+    border: 10px solid transparent;
+    border-right-color: white;
+    border-left: 0;
+    left: 0;
+    top: 50%;
+    transform: translate(-100%, -50%);
+}
+
+.tooltip:before {
+    border-right-color: #a7a7a7;
+    margin-left: -1px;
+}
