@@ -4,6 +4,7 @@ import { storiesOf, action } from '@kadira/storybook';
 import {StickyMenu} from './Menu';
 import {StickyHeaders} from './StickyHeaders';
 import {TooltipStory} from './Tooltip';
+import {SimpleStory} from './Simple';
 
 
 storiesOf('Tether', module)
@@ -14,4 +15,5 @@ storiesOf('Tether', module)
         <StickyHeaders/>
     ))
     .add('tooltip', () => <TooltipStory/>)
+    .add('simple', () => <SimpleStory/>)
 ;
